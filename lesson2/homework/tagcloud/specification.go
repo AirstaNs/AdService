@@ -1,14 +1,9 @@
 package tagcloud
 
-import (
-	"sort"
-)
-
-var tagCloud TagCloud
-
 // TagCloud aggregates statistics about used tags
 type TagCloud struct {
-	StatMap map[string]int
+	StatMap  map[string]int
+	StatList []TagStat
 }
 
 // TagStat represents statistics regarding single tag
@@ -18,19 +13,46 @@ type TagStat struct {
 }
 
 // New should create a valid TagCloud instance
-func New() TagCloud {
-	tagCloud.StatMap = make(map[string]int)
-	return TagCloud{StatMap: tagCloud.StatMap}
+func New() *TagCloud {
+	return &TagCloud{
+		StatMap:  make(map[string]int),
+		StatList: make([]TagStat, 0),
+	}
 }
 
 // AddTag should add a tag to the cloud if it wasn't present and increase tag occurrence count
 // thread-safety is not needed
-func (TagCloud) AddTag(tag string) {
-	if elem, ok := tagCloud.StatMap[tag]; ok {
-		elem++
-		tagCloud.StatMap[tag] = elem
+func (tagCloud *TagCloud) AddTag(tag string) {
+	// Получаем индекс по которому хранится tag в TagList из tagMap O(1)
+	//	Либо добавляет в конец tag с частотой 1
+	if currIndex, ok := tagCloud.StatMap[tag]; ok {
+		newStat := tagCloud.StatList[currIndex]
+		newStat.OccurrenceCount++
+
+		tagCloud.StatList[currIndex] = newStat
+		statList := tagCloud.StatList
+
+		// Ищем с помощью бинарного поиска первое вхождение большего числа и свапаем от currIndex до indexGreat,
+		//либо пока  statList[i].OccurrenceCount < statList[more].OccurrenceCount (next элемент не станет больше currIndex),
+		// если нету большего элемента от currIndex до indexGreat не свапаем и выходим из метода. O(logN)
+		indexGreat := binarySearchTagStat(statList, 0, currIndex, statList[currIndex].OccurrenceCount)
+		if indexGreat == -1 || indexGreat == currIndex {
+			return
+		}
+		for i := currIndex; i > indexGreat; i-- {
+			more := i - 1
+			if statList[i].OccurrenceCount < statList[more].OccurrenceCount {
+				break
+			}
+			if statList[i].OccurrenceCount > statList[more].OccurrenceCount {
+				swap(i, more, tagCloud.StatList)
+				tagCloud.StatMap[tag] = more
+				tagCloud.StatMap[statList[i].Tag] = i
+			}
+		}
 	} else {
-		tagCloud.StatMap[tag] = 1
+		tagCloud.StatList = append(tagCloud.StatList, TagStat{Tag: tag, OccurrenceCount: 1})
+		tagCloud.StatMap[tag] = len(tagCloud.StatList) - 1
 	}
 }
 
@@ -39,18 +61,29 @@ func (TagCloud) AddTag(tag string) {
 // if n is greater that TagCloud size then all elements should be returned
 // thread-safety is not needed
 // there are no restrictions on time complexity
-func (TagCloud) TopN(n int) []TagStat {
-	statMap := tagCloud.StatMap
-	stats := make([]TagStat, 0, len(statMap))
-	for k, v := range statMap {
-		stats = append(stats, TagStat{Tag: k, OccurrenceCount: v})
-	}
-	sort.Slice(stats, func(i, j int) bool {
-		return stats[i].OccurrenceCount > stats[j].OccurrenceCount
-	})
-	if n > len(tagCloud.StatMap) {
+func (tagCloud *TagCloud) TopN(n int) []TagStat {
+	stats := tagCloud.StatList
+	if n > len(tagCloud.StatList) {
 		return stats
 	} else {
 		return stats[:n]
 	}
+}
+
+func swap(i, j int, list []TagStat) {
+	list[i], list[j] = list[j], list[i]
+}
+
+func binarySearchTagStat(arr []TagStat, low, high, currElement int) int {
+	for low <= high {
+		mid := (low + high) / 2
+		if arr[mid].OccurrenceCount > currElement {
+			return mid
+		} else if arr[mid].OccurrenceCount < currElement {
+			return mid
+		} else {
+			low = mid + 1
+		}
+	}
+	return -1
 }
