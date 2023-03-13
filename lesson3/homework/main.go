@@ -1,65 +1,93 @@
 package main
 
 import (
-	"flag"
+	"errors"
 	"fmt"
-	"math"
+	"io"
+	"log"
 	"os"
-	"strconv"
 )
-
-type Options struct {
-	From        string
-	To          string
-	Offset      int
-	Limit       int
-	BlockSize   int
-	Conversions Converter
-}
-
-const (
-	input     = "stdin"
-	output    = "stdout"
-	offset    = 0
-	limit     = math.MaxInt32
-	blockSize = 4096
-	conv      = ""
-)
-
-func ParseFlags() (*Options, error) {
-	var opts Options
-
-	flag.StringVar(&opts.From, "from", input, "file to read. by default - stdin")
-	flag.StringVar(&opts.To, "to", output, "file to write. by default - stdout")
-	off := flag.String("offset", strconv.Itoa(offset), "number of bytes inside input to be skipped when copying")
-	lim := flag.String("limit", strconv.Itoa(limit), "max number of bytes to read")
-	bs := flag.String("block-size", strconv.Itoa(blockSize), "size of one block in bytes")
-	conv := flag.String("conv", conv, "comma-separated list of conversion functions")
-	flag.Parse()
-	opts.Offset = parseIntFlag(*off, offset)
-	opts.Limit = parseIntFlag(*lim, limit)
-	opts.BlockSize = parseIntFlag(*bs, blockSize)
-
-	var opt = new(TransformOptions)
-	opt.parse(conv)
-	opts.Conversions = opt
-	return &opts, nil
-}
-func parseIntFlag(value string, defaultArg int) int {
-	arg, err := strconv.Atoi(value)
-	if err != nil {
-		arg = defaultArg
-	}
-	return arg
-}
 
 func main() {
+	log.SetOutput(os.Stderr) //TODO
 	opts, err := ParseFlags()
 	if err != nil {
 		_, _ = fmt.Fprintln(os.Stderr, "can not parse flags:", err)
 		os.Exit(1)
 	}
-	fmt.Println(opts.Offset, opts.To)
+	var read, write *os.File
+	if opts.From == input {
+		read = os.Stdin
+	} else {
+		read = openFile(opts.From)
+		defer read.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	if opts.To == output {
+		write = os.Stdout
+	} else {
+		write = createFile(opts.To)
+		defer write.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer func(write *os.File) {
+			err := write.Close()
+			if err != nil {
+
+			}
+		}(write)
+	}
+	_, err = io.CopyN(write, read, int64(opts.Limit))
+	if err != nil {
+		if errors.Is(err, io.EOF) {
+			fmt.Print("")
+			//fmt.Print(io.EOF)
+			//fmt.Println(io.EOF)
+		} else {
+			log.Fatal(err)
+		}
+	}
+}
+
+func openFile(path string) *os.File {
+	log.SetOutput(os.Stderr) //TODO
+	file, err := os.Open(path)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "can not open file:", err)
+		os.Exit(1)
+		//log.Fatal(err)
+	}
+	return file
+}
+func createFile(path string) *os.File {
+	log.SetOutput(os.Stderr) //TODO
+	file, err := os.Create(path)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "can not create file:", err)
+		os.Exit(1)
+		//log.Fatal(err)
+	}
+	return file
+}
+
+func writeFile(opts *Options, inputFile *os.File, outputFile *os.File) {
+	buf := make([]byte, opts.BlockSize)
+	for {
+		readTotal, err := inputFile.Read(buf)
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				fmt.Println("EOF")
+				break // after reading the last chunk, break the loop
+			}
+			log.Fatal(err)
+		}
+		outputFile.WriteString(string(buf[:readTotal]))
+		//fmt.Println(string(buf[:readTotal]))
+	}
 }
 
 // -conv upper_case,lower_case,trim_spaces
