@@ -57,9 +57,7 @@ func openFile(path string) *os.File {
 	log.SetOutput(os.Stderr) //TODO
 	file, err := os.Open(path)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "can not open file:", err)
-		os.Exit(1)
-		//log.Fatal(err)
+		log.Fatal("can not open file:", err)
 	}
 	return file
 }
@@ -67,9 +65,11 @@ func createFile(path string) *os.File {
 	log.SetOutput(os.Stderr) //TODO
 	file, err := os.Create(path)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "can not create file:", err)
-		os.Exit(1)
+		log.Fatal("can not create file:", err)
 		//log.Fatal(err)
+	}
+	if !errors.Is(err, os.ErrNotExist) {
+		log.Fatal("file already exists:", err)
 	}
 	return file
 }
