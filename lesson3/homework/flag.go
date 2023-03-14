@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"log"
 	"math"
 	"strconv"
 )
@@ -34,19 +35,26 @@ func ParseFlags() (*Options, error) {
 	bs := flag.String("block-size", strconv.Itoa(blockSize), "size of one block in bytes")
 	conv := flag.String("conv", conv, "comma-separated list of conversion functions")
 	flag.Parse()
-	opts.Offset = parseIntFlag(*off, offset)
-	opts.Limit = parseIntFlag(*lim, limit)
-	opts.BlockSize = parseIntFlag(*bs, blockSize)
+	opts.Offset = parseIntFlag(*off)
+	opts.Limit = parseIntFlag(*lim)
+	opts.BlockSize = parseIntFlag(*bs)
 
+	if opts.Offset != offset && opts.Limit != limit {
+		if opts.Offset > opts.Limit {
+			log.Fatal("offset is greater than limit")
+		}
+	}
 	var opt = new(TransformOptions)
 	opt.parse(conv)
 	opts.Conversions = opt
 	return &opts, nil
 }
-func parseIntFlag(value string, defaultArg int) int {
+func parseIntFlag(value string) int {
 	arg, err := strconv.Atoi(value)
 	if err != nil {
-		arg = defaultArg
+		log.Fatal(err)
+	} else if arg < 0 {
+		log.Fatal("negative value")
 	}
 	return arg
 }

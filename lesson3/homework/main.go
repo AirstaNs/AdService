@@ -19,11 +19,15 @@ func main() {
 	if opts.From == input {
 		read = os.Stdin
 	} else {
-		read = openFile(opts.From)
+		read = openFile(opts.From, opts)
 		defer read.Close()
 		if err != nil {
 			log.Fatal(err)
 		}
+		//fi, err := read.Stat()
+		//if err != nil {
+		//	log.Fatal(err)
+		//}
 	}
 
 	if opts.To == output {
@@ -53,7 +57,7 @@ func main() {
 	}
 }
 
-func openFile(path string) *os.File {
+func openFile(path string, opts *Options) *os.File {
 	log.SetOutput(os.Stderr) //TODO
 	file, err := os.Open(path)
 	if err != nil {
@@ -63,15 +67,17 @@ func openFile(path string) *os.File {
 }
 func createFile(path string) *os.File {
 	log.SetOutput(os.Stderr) //TODO
-	file, err := os.Create(path)
+	file, err := os.Open(path)
 	if err != nil {
-		log.Fatal("can not create file:", err)
-		//log.Fatal(err)
-	}
-	if !errors.Is(err, os.ErrNotExist) {
-		log.Fatal("file already exists:", err)
+		file, err = os.Create(path)
+		if err != nil {
+			log.Fatal("can not create file:", err)
+		}
+	} else {
+		log.Fatal("file already exists")
 	}
 	return file
+
 }
 
 func writeFile(opts *Options, inputFile *os.File, outputFile *os.File) {
