@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -36,13 +37,20 @@ func main() {
 
 	// seek to offset
 	//	n, err := read.Seek((opts.Offset), io.SeekStart)
-	n, _ := io.CopyN(io.Discard, read, opts.Offset)
-	_, err = io.CopyN(write, read, opts.Limit)
 
-	// check offset
+	n, _ := io.CopyN(io.Discard, read, opts.Offset)
+
 	if n < opts.Offset {
 		log.Fatal("offset is greater than limit")
 	}
+
+	buf := new(strings.Builder)
+	_, err = io.CopyN(buf, read, opts.Limit)
+	//fmt.Println(file)
+	conv := opts.Conversions.Convert([]byte(buf.String()))
+	//check offset
+	_, err = io.CopyN(write, strings.NewReader(string(conv)), opts.Limit)
+
 	if err != nil {
 		if errors.Is(err, io.EOF) {
 			fmt.Print("")
@@ -94,19 +102,52 @@ func writeFile(opts *Options, inputFile *os.File, outputFile *os.File) {
 		//fmt.Println(string(buf[:readTotal]))
 	}
 }
-func readFile(opts *Options, inputFile *os.File) {
-	buf := make([]byte, opts.BlockSize)
-	for {
-		readTotal, err := inputFile.Read(buf)
-		if err != nil {
-			if errors.Is(err, io.EOF) {
-				fmt.Println("EOF")
-				break // after reading the last chunk, break the loop
-			}
-			log.Fatal(err)
-		}
-		fmt.Println(string(buf[:readTotal]))
-	}
+
+func readFile(opts *Options, inputFile *os.File, writerFile *os.File) {
+	//	buf := make([]byte, 0, opts.BlockSize)
+	//for {
+	//	//	n, err := io.ReadFull(r, buf[:cap(buf)])
+	//	buf = buf[:read]
+	//	if err != nil {
+	//		errors.Is(err, io.EOF)
+	//		break
+	//
+	//		//if err != io.ErrUnexpectedEOF {
+	//		//	fmt.Fprintln(os.Stderr, err)
+	//		//	break
+	//		//}
+	//	}
+	//
+	//	//fmt.Println("read n bytes...", n)
+	//	// process buf
+	//}
+
+	//var limit int64
+	//if opts.Limit > opts.BlockSize {
+	//	limit = opts.BlockSize
+	//} else {
+	//	limit = opts.Limit
+	//}
+	//limReader := io.LimitReader(inputFile, opts.Limit)
+	//i := make([]byte, opts.Limit)
+	//limReader.Read(i)
+	//return string(i)
+
+	//io.CopyN
+	//buf := make([]byte, opts.BlockSize)
+	//var str strings.Builder
+	//for {
+	//	readTotal, err := inputFile.Read(buf)
+	//	if err != nil {
+	//		if errors.Is(err, io.EOF) {
+	//			break // after reading the last chunk, break the loop
+	//		}
+	//		log.Fatal(err)
+	//	}
+	//	str.WriteString(string(buf[:readTotal]))
+	//	//fmt.Println(string(buf[:readTotal]))
+	//}
+	//return str.String()
 }
 
 func getInput(opts *Options) *os.File {

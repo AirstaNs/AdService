@@ -2,13 +2,15 @@ package main
 
 import (
 	"bytes"
+	"log"
 	"strings"
 )
 
 const (
-	Upper      = "upper_case"
-	Lower      = "lower_case"
-	TrimSpaces = "trim_spaces"
+	Upper       = "upper_case"
+	Lower       = "lower_case"
+	TrimSpaces  = "trim_spaces"
+	DefaultConv = "defaultConv"
 )
 
 type TransformOptions struct {
@@ -32,21 +34,33 @@ func (opt *TransformOptions) Convert(arrByte []byte) []byte {
 	return arrByte
 }
 func (opt *TransformOptions) parse(conv *string) {
-	args := parsing(*conv)
+	args := splitArgs(*conv)
 
 	for _, arg := range args {
 		switch arg {
+		case DefaultConv:
+			opt.Upper, opt.Lower, opt.Lower = false, false, false
 		case Upper:
 			opt.Upper = true
 		case Lower:
 			opt.Lower = true
 		case TrimSpaces:
 			opt.Trim = true
+		default:
+			log.Fatal("unknown conversion function")
 		}
+	}
+
+	checkContradictory(opt)
+
+}
+func checkContradictory(opt *TransformOptions) {
+	if opt.Upper && opt.Lower {
+		log.Fatal("upper and lower case can not be used together")
 	}
 }
 
-func parsing(str string) []string {
+func splitArgs(str string) []string {
 	const delimiter = ","
 	return strings.Split(str, delimiter)
 }

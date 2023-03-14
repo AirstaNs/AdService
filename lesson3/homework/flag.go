@@ -22,7 +22,6 @@ const (
 	offset    = 0
 	limit     = math.MaxInt32
 	blockSize = 4096
-	conv      = ""
 )
 
 func ParseFlags() (*Options, error) {
@@ -33,7 +32,7 @@ func ParseFlags() (*Options, error) {
 	off := flag.String("offset", strconv.Itoa(offset), "number of bytes inside input to be skipped when copying")
 	lim := flag.String("limit", strconv.Itoa(limit), "max number of bytes to read")
 	bs := flag.String("block-size", strconv.Itoa(blockSize), "size of one block in bytes")
-	conv := flag.String("conv", conv, "comma-separated list of conversion functions")
+	conv := flag.String("conv", DefaultConv, "comma-separated list of conversion functions")
 	flag.Parse()
 	opts.Offset = parseIntFlag(*off)
 	opts.Limit = parseIntFlag(*lim)
