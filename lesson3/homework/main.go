@@ -11,41 +11,22 @@ import (
 func main() {
 	log.SetOutput(os.Stderr) //TODO
 	opts, err := ParseFlags()
-	if err != nil {
-		_, _ = fmt.Fprintln(os.Stderr, "can not parse flags:", err)
-		os.Exit(1)
-	}
+	handleAllError(err, "can not parse flags:")
+
 	var read, write *os.File
-	if opts.From == input {
-		read = os.Stdin
-	} else {
-		read = openFile(opts.From, opts)
-		defer read.Close()
-		if err != nil {
-			log.Fatal(err)
-		}
-		//fi, err := read.Stat()
-		//if err != nil {
-		//	log.Fatal(err)
-		//}
-	}
+	read = getInput(opts)
+	defer read.Close()
+	handleAllError(err, "can not open file:")
 
-	if opts.To == output {
-		write = os.Stdout
-	} else {
-		write = createFile(opts.To)
-		defer write.Close()
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer func(write *os.File) {
-			err := write.Close()
-			if err != nil {
+	write = getOutput(opts)
+	defer write.Close()
+	handleAllError(err, "can not open file:")
 
-			}
-		}(write)
-	}
-	_, err = io.CopyN(write, read, int64(opts.Limit))
+	// seek to offset
+	//	n, err := read.Seek((opts.Offset), io.SeekStart)
+	_, _ = io.CopyN(io.Discard, read, opts.Offset)
+	_, err = io.CopyN(write, read, opts.Limit)
+
 	if err != nil {
 		if errors.Is(err, io.EOF) {
 			fmt.Print("")
@@ -60,9 +41,7 @@ func main() {
 func openFile(path string, opts *Options) *os.File {
 	log.SetOutput(os.Stderr) //TODO
 	file, err := os.Open(path)
-	if err != nil {
-		log.Fatal("can not open file:", err)
-	}
+	handleAllError(err, "can not open file:")
 	return file
 }
 func createFile(path string) *os.File {
@@ -70,14 +49,18 @@ func createFile(path string) *os.File {
 	file, err := os.Open(path)
 	if err != nil {
 		file, err = os.Create(path)
-		if err != nil {
-			log.Fatal("can not create file:", err)
-		}
+		handleAllError(err, "can not create file:")
 	} else {
 		log.Fatal("file already exists")
 	}
 	return file
 
+}
+
+func handleAllError(err error, message string) {
+	if err != nil {
+		log.Fatal(message, err)
+	}
 }
 
 func writeFile(opts *Options, inputFile *os.File, outputFile *os.File) {
@@ -94,6 +77,33 @@ func writeFile(opts *Options, inputFile *os.File, outputFile *os.File) {
 		outputFile.WriteString(string(buf[:readTotal]))
 		//fmt.Println(string(buf[:readTotal]))
 	}
+}
+func readFile(opts *Options, inputFile *os.File) {
+	buf := make([]byte, opts.BlockSize)
+	for {
+		readTotal, err := inputFile.Read(buf)
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				fmt.Println("EOF")
+				break // after reading the last chunk, break the loop
+			}
+			log.Fatal(err)
+		}
+		fmt.Println(string(buf[:readTotal]))
+	}
+}
+
+func getInput(opts *Options) *os.File {
+	if opts.From == input {
+		return os.Stdin
+	}
+	return openFile(opts.From, opts)
+}
+func getOutput(opts *Options) *os.File {
+	if opts.To == output {
+		return os.Stdout
+	}
+	return createFile(opts.To)
 }
 
 // -conv upper_case,lower_case,trim_spaces

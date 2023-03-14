@@ -10,9 +10,9 @@ import (
 type Options struct {
 	From        string
 	To          string
-	Offset      int
-	Limit       int
-	BlockSize   int
+	Offset      int64
+	Limit       int64
+	BlockSize   int64
 	Conversions Converter
 }
 
@@ -39,21 +39,21 @@ func ParseFlags() (*Options, error) {
 	opts.Limit = parseIntFlag(*lim)
 	opts.BlockSize = parseIntFlag(*bs)
 
-	if opts.Offset != offset && opts.Limit != limit {
-		if opts.Offset > opts.Limit {
-			log.Fatal("offset is greater than limit")
-		}
-	}
+	//if opts.Offset != offset && opts.Limit != limit {
+	//	if opts.Offset > opts.Limit {
+	//		log.Fatal("offset is greater than limit")
+	//	}
+	//}
 	var opt = new(TransformOptions)
 	opt.parse(conv)
 	opts.Conversions = opt
 	return &opts, nil
 }
-func parseIntFlag(value string) int {
-	arg, err := strconv.Atoi(value)
-	if err != nil {
-		log.Fatal(err)
-	} else if arg < 0 {
+func parseIntFlag(value string) int64 {
+	arg, err := strconv.ParseInt(value, 10, 64)
+	handleAllError(err, "can not parse int flag")
+
+	if arg < 0 {
 		log.Fatal("negative value")
 	}
 	return arg
