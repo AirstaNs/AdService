@@ -39,11 +39,6 @@ func ParseFlags() (*Options, error) {
 	opts.Limit = parseIntFlag(*lim)
 	opts.BlockSize = parseIntFlag(*bs)
 
-	//if opts.Offset != offset && opts.Limit != limit {
-	//	if opts.Offset > opts.Limit {
-	//		log.Fatal("offset is greater than limit")
-	//	}
-	//}
 	var opt = new(TransformOptions)
 	opt.parse(conv)
 	opts.Conversions = opt

@@ -18,15 +18,31 @@ func main() {
 	defer read.Close()
 	handleAllError(err, "can not open file:")
 
+	if opts.Offset != offset && opts.From != input {
+		stat, err := read.Stat()
+		if err == nil {
+			size := stat.Size()
+			if opts.Offset > size {
+				log.Fatal("offset is greater than limit")
+			}
+		} else {
+			log.Fatal(err)
+		}
+	}
+
 	write = getOutput(opts)
 	defer write.Close()
 	handleAllError(err, "can not open file:")
 
 	// seek to offset
 	//	n, err := read.Seek((opts.Offset), io.SeekStart)
-	_, _ = io.CopyN(io.Discard, read, opts.Offset)
+	n, _ := io.CopyN(io.Discard, read, opts.Offset)
 	_, err = io.CopyN(write, read, opts.Limit)
 
+	// check offset
+	if n < opts.Offset {
+		log.Fatal("offset is greater than limit")
+	}
 	if err != nil {
 		if errors.Is(err, io.EOF) {
 			fmt.Print("")
