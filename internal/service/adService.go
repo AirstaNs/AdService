@@ -15,6 +15,7 @@ type adService struct {
 	dateTimeFormat util.DateTimeFormatter
 }
 
+//go:generate go run github.com/vektra/mockery/v2@v2.25.0 --name=AdService --filename=mockAdservice.go --output ../mocks/servicemocks
 type AdService interface {
 	CreateAd(ctx context.Context, title string, text string, authorID int64) (*entities.Ad, error)
 	ChangeAdStatus(ctx context.Context, adID int64, authorID int64, published bool) (*entities.Ad, error)

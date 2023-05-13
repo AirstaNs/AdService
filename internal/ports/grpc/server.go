@@ -13,6 +13,7 @@ type grpcServer struct {
 	log     *log.Logger
 }
 
+//go:generate go run github.com/vektra/mockery/v2@v2.25.0 --name=Server --filename=mocServer.go --output ../../mocks/servermock
 type Server interface {
 	Start(network, address string) error
 	Stop() error

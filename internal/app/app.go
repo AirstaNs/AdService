@@ -7,6 +7,7 @@ import (
 	"homework10/internal/util"
 )
 
+//go:generate go run github.com/vektra/mockery/v2@v2.25.0 --name=App --filename=mockApp.go --output ../mocks/appemocks
 type App interface {
 	service.UserService
 	service.AdService

@@ -10,6 +10,7 @@ type usersService struct {
 	userRepository userrepo.UserRepository
 }
 
+//go:generate go run github.com/vektra/mockery/v2@v2.25.0 --name=UserService --filename=mockUserService.go --output ../mocks/servicemocks
 type UserService interface {
 	CreateUser(ctx context.Context, nickname string, email string) (*entities.User, error)
 	UpdateUser(ctx context.Context, UserID int64, Nickname string, Email string) (*entities.User, error)

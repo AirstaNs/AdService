@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+//go:generate go run github.com/vektra/mockery/v2@v2.25.0 --name=AdRepository --filename=mockAdrepo.go --output ../../../mocks/repomocks
 type AdRepository interface {
 	AddAd(ad entities.Ad) (int64, error)
 	EditAdStatus(ad *entities.Ad, published bool, updateTime time.Time) (*entities.Ad, error)

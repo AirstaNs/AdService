@@ -9,6 +9,7 @@ import (
 
 var ErrEmptyUser = errors.New("user is empty")
 
+//go:generate go run github.com/vektra/mockery/v2@v2.25.0 --name=UserRepository --filename=mockUserRepo.go --output ../../../mocks/repomocks
 type UserRepository interface {
 	AddUser(user entities.User) (int64, error)
 	EditUser(setUser entities.User) (*entities.User, error)
