@@ -478,3 +478,22 @@ func TestGetAdsByFilter(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, expectedAds, ads)
 }
+
+func BenchmarkAdService_CreateAd(b *testing.B) {
+	adRepo := new(mocks.AdRepository)
+	service := NewAdsService(adRepo, util.NewDateTimeFormatter(time.DateOnly))
+
+	toTime, _ := service.GetDateTimeFormat().ToTime(time.Now().UTC())
+
+	testAd.CreateDate = toTime
+	testAd.UpdateDate = toTime
+	testAd.ID = testID
+
+	adRepo.
+		On("AddAd", testAd).
+		Return(testID, nil)
+
+	for i := 0; i < b.N; i++ {
+		_, _ = service.CreateAd(context.Background(), testAd.Title, testAd.Text, testAd.AuthorID)
+	}
+}

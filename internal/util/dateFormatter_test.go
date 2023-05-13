@@ -62,3 +62,12 @@ func TestDateTimeFormatter_SetDateTimeFormat(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, exp, act)
 }
+
+func FuzzDateTimeFormatter_ToString(f *testing.F) {
+	formatter := NewDateTimeFormatter(time.DateTime)
+	f.Fuzz(func(t *testing.T, inputSec int64) {
+		format := time.Unix(inputSec, 0).Format(time.DateTime)
+		_, err := formatter.ToTimeFromString(format)
+		assert.NoError(t, err)
+	})
+}

@@ -119,3 +119,19 @@ func (s *serviceSuiteUsers) TestRemoveUserWrongID() {
 	err := s.service.RemoveUser(context.Background(), badUserID)
 	s.ErrorIs(userrepo.ErrEmptyUser, err)
 }
+
+func BenchmarkUsersService_CreateUser(b *testing.B) {
+	uRepo := new(mocks.UserRepository)
+	service := NewUserService(uRepo)
+
+	nUser := tUser
+	tUser.ID = testUserID
+
+	uRepo.
+		On("AddUser", nUser).
+		Return(testUserID, nil)
+
+	for i := 0; i < b.N; i++ {
+		_, _ = service.CreateUser(context.Background(), nUser.Nickname, nUser.Email)
+	}
+}
