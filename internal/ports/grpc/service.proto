@@ -1,0 +1,104 @@
+syntax = "proto3";
+
+package ad;
+option go_package = "lesson9/homework/internal/ports/grpc";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+
+service AdService {
+  rpc AddAd(CreateAdRequest) returns (AdResponse) {}
+  rpc UpdateAdStatus(ChangeAdStatusRequest) returns (AdResponse) {}
+  rpc ModifyAd(UpdateAdRequest) returns (AdResponse) {}
+  rpc GetAd(getADByIDRequest) returns (AdResponse) {}
+  rpc GetAds(AdFilters) returns (ListAdResponse) {}
+  rpc RemoveAd(DeleteAdRequest) returns (DeleteAdResponse) {}
+  rpc ModifyUser(UserUpdateRequest) returns (UserResponse) {}
+  rpc AddUser(UserRequest) returns (UserResponse) {}
+  rpc GetUser(GetUserRequest) returns (UserResponse) {}
+  rpc RemoveUser(DeleteUserRequest) returns (DeleteUserResponse) {}
+}
+
+message AdFilters {
+  google.protobuf.Int64Value optional_author_id = 1;
+  google.protobuf.BoolValue  optional_published = 2;
+  google.protobuf.Timestamp optional_create_date = 3;
+  google.protobuf.StringValue optional_title = 4;
+}
+
+
+message getADByIDRequest {
+  int64 ad_id = 1;
+}
+
+
+message CreateAdRequest {
+  string title = 1;
+  string text = 2;
+  int64 user_id = 3;
+}
+
+message ChangeAdStatusRequest {
+  int64 ad_id = 1;
+  int64 user_id = 2;
+  bool published = 3;
+}
+
+
+message UpdateAdRequest {
+  int64 ad_id = 1;
+  int64 user_id = 2;
+  string title = 3;
+  string text = 4;
+}
+
+message AdResponse {
+  int64 id = 1;
+  string title = 2;
+  string text = 3;
+  int64 author_id = 4;
+  bool published = 5;
+  google.protobuf.Timestamp create_date = 6;
+  google.protobuf.Timestamp update_date = 7;
+}
+
+message ListAdResponse {
+  repeated AdResponse list = 1;
+}
+
+message UserRequest {
+  string nickname = 1;
+  string email = 2;
+}
+message UserUpdateRequest {
+  int64 id = 1;
+  string nickname = 2;
+  string email = 3;
+}
+
+message UserResponse {
+  int64 id = 1;
+  string nickname = 2;
+  string email = 3;
+}
+
+message GetUserRequest {
+  int64 id = 1;
+}
+
+message DeleteUserRequest {
+  int64 id = 1;
+}
+
+message DeleteAdResponse {
+  int64 ad_id = 1;
+  int64 user_id = 2;
+}
+
+message DeleteAdRequest {
+  int64 ad_id = 1;
+  int64 author_id = 2;
+}
+
+message DeleteUserResponse {
+  int64 id = 1;
+}
