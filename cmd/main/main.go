@@ -7,7 +7,7 @@ import (
 	"homework10/internal/adapters/repository/adrepo"
 	"homework10/internal/adapters/repository/userrepo"
 	"homework10/internal/app"
-	grpcImpl "homework10/internal/ports/grpc"
+	"homework10/internal/ports/grpc"
 	"homework10/internal/ports/httpgin"
 	"homework10/internal/util"
 	"log"
@@ -18,13 +18,25 @@ import (
 )
 
 const (
-	grpcPort      = ":50051"
-	httpPort      = ":18080"
+	//grpcPort = ":50051"
+	//httpPort      = ":8080"
 	server        = "localhost"
 	serverNetwork = "tcp"
 )
 
+var PORT_REST = ":" + os.Getenv("PORT_REST")
+var PORT_gRPC = ":" + os.Getenv("PORT_gRPC")
+
+//func main() {
+//	r := gin.New()
+//	r.GET("/get", func(context *gin.Context) {
+//		context.JSON(http.StatusOK, gin.H{"HERLLO HORLD": "DGOGOGOGO"})
+//	})
+//	r.Run()
+//}
+
 func main() {
+	fmt.Println(PORT_REST)
 	repo := adrepo.New()
 	uRep := userrepo.New()
 	formatter := util.NewDateTimeFormatter(time.RFC3339)
@@ -39,8 +51,8 @@ func main() {
 	sigQuit := make(chan os.Signal, 1)
 	signal.Notify(sigQuit, signals...)
 
-	hServer := httpgin.NewHTTPServer(server+httpPort, newApp, httpLogger)
-	gServer := grpcImpl.NewServer(rpcLogger, newApp)
+	hServer := httpgin.NewHTTPServer(PORT_REST, newApp, httpLogger)
+	gServer := grpc.NewServer(rpcLogger, newApp)
 
 	g.Go(func() error {
 		select {
@@ -63,7 +75,7 @@ func main() {
 		}()
 
 		go func() {
-			if err := hServer.Start(server, httpPort); err != nil {
+			if err := hServer.Start("", PORT_REST); err != nil {
 				errCh <- err
 			}
 		}()
@@ -85,7 +97,7 @@ func main() {
 		}()
 
 		go func() {
-			if err := gServer.Start(serverNetwork, server+grpcPort); err != nil {
+			if err := gServer.Start(serverNetwork, PORT_gRPC); err != nil {
 				errCh <- err
 			}
 		}()

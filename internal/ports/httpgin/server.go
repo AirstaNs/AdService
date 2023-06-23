@@ -28,7 +28,7 @@ func NewHTTPServer(port string, a app.App, logger *log.Logger) grpc2.Server {
 }
 
 func (s *HttpServer) Start(network, address string) error {
-	s.log.Printf("starting http server started at %s:%s", network, address)
+	s.log.Printf("starting http server port:  %s%s", network, address)
 	if err := s.App.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		s.log.Fatalf("listen: %s\n", err)
 		return err
