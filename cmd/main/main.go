@@ -20,24 +20,12 @@ import (
 )
 
 const (
-	//grpcPort = ":50051"
-	//httpPort      = ":8080"
-	server        = "localhost"
 	serverNetwork = "tcp"
 )
 
 var PORT_REST string
 var PORT_gRPC string
 
-//func main() {
-//	r := gin.New()
-//	r.GET("/get", func(context *gin.Context) {
-//		context.JSON(http.StatusOK, gin.H{"HERLLO HORLD": "DGOGOGOGO"})
-//	})
-//	r.Run()
-//}
-
-// "example.crt", "example.key"
 func main() {
 	PORT_REST = setPortEnv(3333, "PORT_REST", ":")
 	PORT_gRPC = setPortEnv(5051, "PORT_gRPC", ":")

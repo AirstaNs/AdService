@@ -9,7 +9,8 @@ RUN apk update --no-cache && apk add --no-cache ca-certificates
 
 WORKDIR /myapp
 COPY --from=builder /build/server ./server
-COPY cert.crt key.key ./
+COPY cert.crt /etc/ssl/certs/
+COPY key.key /etc/ssl/private/
 ENV PORT_REST=443
 ENV PORT_gRPC=5051
 EXPOSE $PORT_REST
