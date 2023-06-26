@@ -51,7 +51,7 @@ func main() {
 	uRep := userrepo.New()
 	formatter := util.NewDateTimeFormatter(time.RFC3339)
 	newApp := app.NewApp(repo, uRep, formatter)
-	signals := append([]os.Signal{}, os.Interrupt, os.Kill, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	signals := append([]os.Signal{}, os.Interrupt, os.Kill, syscall.SIGINT, syscall.SIGTERM)
 
 	httpLogger := log.New(os.Stdout, "[HTTP] ", 0)
 	rpcLogger := log.New(os.Stdout, "[gRPC] ", 0)
