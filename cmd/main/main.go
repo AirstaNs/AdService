@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"golang.org/x/sync/errgroup"
 	"homework10/internal/adapters/repository/adrepo"
@@ -13,6 +14,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 )
@@ -24,8 +26,8 @@ const (
 	serverNetwork = "tcp"
 )
 
-var PORT_REST = ":" + os.Getenv("PORT_REST")
-var PORT_gRPC = ":" + os.Getenv("PORT_gRPC")
+var PORT_REST string
+var PORT_gRPC string
 
 //func main() {
 //	r := gin.New()
@@ -35,7 +37,15 @@ var PORT_gRPC = ":" + os.Getenv("PORT_gRPC")
 //	r.Run()
 //}
 
+// "example.crt", "example.key"
 func main() {
+	PORT_REST = setPortEnv(3333, "PORT_REST", ":")
+	PORT_gRPC = setPortEnv(5051, "PORT_gRPC", ":")
+
+	cert := flag.String("pCertFile", "not_found", "get path to Cert File for TLS")
+	key := flag.String("pKeyFile", "not_found", "get path to Key File for TLS")
+
+	flag.Parse()
 	fmt.Println(PORT_REST)
 	repo := adrepo.New()
 	uRep := userrepo.New()
@@ -51,7 +61,7 @@ func main() {
 	sigQuit := make(chan os.Signal, 1)
 	signal.Notify(sigQuit, signals...)
 
-	hServer := httpgin.NewHTTPServer(PORT_REST, newApp, httpLogger)
+	hServer := httpgin.NewHTTPServer(PORT_REST, newApp, httpLogger, *cert, *key)
 	gServer := grpc.NewServer(rpcLogger, newApp)
 
 	g.Go(func() error {
@@ -113,4 +123,14 @@ func main() {
 	if err2 := g.Wait(); err2 != nil {
 		sysLogger.Printf("gracefully shutting down the servers: %v\n", err2)
 	}
+}
+
+func setPortEnv(dPort int, name, sep string) (port string) {
+	port, ok := os.LookupEnv(name)
+	if ok {
+		port = sep + port
+	} else {
+		port = sep + strconv.Itoa(dPort)
+	}
+	return port
 }
