@@ -8,6 +8,7 @@ import (
 	mocks "homework10/internal/mocks/appemocks"
 	"log"
 	"net/http"
+	"strings"
 	"testing"
 )
 
@@ -53,9 +54,16 @@ func (s *httpAppSuiteRoute) TestAppRouter() {
 	AppRouter(r, s.a, s.logger)
 	routes := g.Routes()
 
-	assert.NotEmpty(s.T(), routes)
-	assert.Lenf(s.T(), routes, len(testCases), "routes count mismatch")
+	filteredRoutes := make([]gin.RouteInfo, 0)
 
+	for _, route := range routes {
+		if !strings.HasPrefix(route.Path, "/debug/pprof") {
+			filteredRoutes = append(filteredRoutes, route)
+		}
+	}
+
+	assert.NotEmpty(s.T(), filteredRoutes)
+	assert.Lenf(s.T(), filteredRoutes, len(testCases), "routes count mismatch")
 	for _, tc := range testCases {
 		found := false
 		for _, route := range routes {
