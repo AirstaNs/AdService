@@ -75,7 +75,7 @@ func getTestClient() *testClient {
 	uRep := userrepo.New()
 	formatter := util.NewDateTimeFormatter(time.RFC3339)
 	newApp := app.NewApp(repo, uRep, formatter)
-	server := httpgin.NewHTTPServer(":18080", newApp, logger)
+	server := httpgin.NewHTTPServer(":18080", newApp, logger, "*cert", "*key")
 	httpServer := server.(*httpgin.HttpServer)
 	testServer := httptest.NewServer(httpServer.App.Handler)
 

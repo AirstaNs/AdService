@@ -4,11 +4,10 @@ import (
 	"context"
 	"errors"
 	"github.com/AirstaNs/ValidationAds"
-	"github.com/golang/protobuf/ptypes/timestamp"
-	"github.com/golang/protobuf/ptypes/wrappers"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 	"homework10/internal/adapters/repository/userrepo"
 	"homework10/internal/app"
 	"homework10/internal/entities"
@@ -128,17 +127,17 @@ func (s GServer) GetAds(ctx context.Context, filters *AdFilters) (*ListAdRespons
 
 	title := filters.GetOptionalTitle()
 	if title == nil {
-		title = &wrappers.StringValue{Value: ""}
+		title = &wrapperspb.StringValue{Value: ""}
 	}
 
 	AuthorId := filters.GetOptionalAuthorId()
 	if AuthorId == nil {
-		AuthorId = &wrappers.Int64Value{Value: -1}
+		AuthorId = &wrapperspb.Int64Value{Value: -1}
 	}
 
 	published := filters.GetOptionalPublished()
 	if published == nil {
-		published = &wrappers.BoolValue{Value: true}
+		published = &wrapperspb.BoolValue{Value: true}
 	}
 
 	adFilters := service.AdFilters{
@@ -234,14 +233,13 @@ func AdListSuccessResponse(ads *[]entities.Ad) ListAdResponse {
 		cDate := a.CreateDate
 		uDate := a.UpdateDate
 		ad := AdResponse{
-			Id:        a.ID,
-			Title:     a.Title,
-			Text:      a.Text,
-			AuthorId:  a.AuthorID,
-			Published: a.Published,
-
-			CreateDate: &timestamp.Timestamp{Seconds: cDate.Unix(), Nanos: int32(cDate.Nanosecond())},
-			UpdateDate: &timestamp.Timestamp{Seconds: uDate.Unix(), Nanos: int32(uDate.Nanosecond())},
+			Id:         a.ID,
+			Title:      a.Title,
+			Text:       a.Text,
+			AuthorId:   a.AuthorID,
+			Published:  a.Published,
+			CreateDate: &timestamppb.Timestamp{Seconds: cDate.Unix(), Nanos: int32(cDate.Nanosecond())},
+			UpdateDate: &timestamppb.Timestamp{Seconds: uDate.Unix(), Nanos: int32(uDate.Nanosecond())},
 		}
 		adsResponse = append(adsResponse, &ad)
 	}
